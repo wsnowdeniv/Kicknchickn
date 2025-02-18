@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Kick’n Chick’ns</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; text-align: center; background-color: #87CEEB; }
+        .controls { position: absolute; bottom: 10px; width: 100%; display: flex; justify-content: center; gap: 20px; }
+        .btn { width: 50px; height: 50px; background: gray; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <script>
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            physics: {
+                default: 'arcade',
+                arcade: { gravity: { y: 300 }, debug: false }
+            },
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
+
+        let player, chicken, coop, wolves;
+        let left = false, right = false, jump = false;
+
+        const game = new Phaser.Game(config);
+
+        function preload() {
+            this.load.image('ground', 'https://i.imgur.com/OQ4e8M2.png'); // Placeholder ground
+            this.load.image('player', 'https://i.imgur.com/YW2J9lI.png'); // Placeholder kicker
+            this.load.image('chicken', 'https://i.imgur.com/64jXZ6b.png'); // Placeholder chicken
+            this.load.image('coop', 'https://i.imgur.com/mSAFky5.png'); // Placeholder coop
+            this.load.image('wolf', 'https://i.imgur.com/JcxItbY.png'); // Placeholder wolf
+        }
+
+        function create() {
+            this.add.text(300, 20, "Kick’n Chick’ns", { fontSize: '24px', fill: '#000' });
+
+            // Ground
+            let ground = this.physics.add.staticGroup();
+            ground.create(400, 580, 'ground').setScale(2).refreshBody();
+
+            // Player (Kicker)
+            player = this.physics.add.sprite(100, 450, 'player');
+            player.setCollideWorldBounds(true);
+
+            // Chicken
+            chicken = this.physics.add.sprite(200, 500, 'chicken');
+            chicken.setBounce(0.2);
+            chicken.setCollideWorldBounds(true);
+
+            // Coop
+            coop = this.physics.add.staticGroup();
+            coop.create(700, 500, 'coop');
+
+            // Wolves
+            wolves = this.physics.add.group();
+            let wolf = wolves.create(700, 500, 'wolf');
+            wolf.setVelocityX(-50);
+
+            // Physics Collisions
+            this.physics.add.collider(player, ground);
+            this.physics.add.collider(chicken, ground);
+            this.physics.add.collider(wolves, ground);
+
+            // Touch Controls
+            let controls = document.createElement("div");
+            controls.className = "controls";
+            controls.innerHTML = `
+                <div class="btn" id="left">⬅️</div>
+                <div class="btn" id="jump">⬆️</div>
+                <div class="btn" id="right">➡️</div>
+                <div class="btn" id="kick">👟</div>
+            `;
+            document.body.appendChild(controls);
+
+            document.getElementById("left").addEventListener("touchstart", () => left = true);
+            document.getElementById("left").addEventListener("touchend", () => left = false);
+            document.getElementById("right").addEventListener("touchstart", () => right = true);
+            document.getElementById("right").addEventListener("touchend", () => right = false);
+            document.getElementById("jump").addEventListener("touchstart", () => jump = true);
+            document.getElementById("kick").addEventListener("touchstart", function () {
+                if (Phaser.Geom.Intersects.RectangleToRectangle(player.getBounds(), chicken.getBounds())) {
+                    chicken.setVelocityX(200);
+                }
+            });
+        }
+
+        function update() {
+            if (left) {
+                player.setVelocityX(-160);
+            } else if (right) {
+                player.setVelocityX(160);
+            } else {
+                player.setVelocityX(0);
+            }
+
+            if (jump && player.body.touching.down) {
+                player.setVelocityY(-330);
+                jump = false;
+            }
+        }
+    </script>
+</body>
+</html>
